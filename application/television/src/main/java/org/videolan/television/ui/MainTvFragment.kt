@@ -40,6 +40,9 @@ import androidx.leanback.widget.Presenter
 import androidx.leanback.widget.Row
 import androidx.leanback.widget.RowPresenter
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
@@ -86,6 +89,7 @@ import org.videolan.vlc.PlaybackService
 import org.videolan.vlc.R
 import org.videolan.vlc.RecommendationsService
 import org.videolan.vlc.StartActivity
+import org.videolan.vlc.gui.helpers.UiTools.addToPlaylist
 import org.videolan.vlc.gui.helpers.UiTools.showDonations
 import org.videolan.vlc.gui.helpers.hf.PinCodeDelegate
 import org.videolan.vlc.gui.video.VideoPlayerActivity
@@ -93,6 +97,7 @@ import org.videolan.vlc.reloadLibrary
 import org.videolan.vlc.util.Permissions
 
 private const val TAG = "VLC/MainTvFragment"
+private const val ID_ADD_ALL_VIDEOS_PLAYLIST = 987654L
 
 class MainTvFragment : BrowseSupportFragment(), OnItemViewSelectedListener, OnItemViewClickedListener,
         View.OnClickListener, PlaybackService.Callback {
@@ -228,6 +233,7 @@ class MainTvFragment : BrowseSupportFragment(), OnItemViewSelectedListener, OnIt
         val lockItem = GenericCardItem(ID_PIN_LOCK, getString(R.string.lock_with_pin_short), "", R.drawable.ic_pin_lock_big, R.color.tv_card_content_dark)
         if (PinCodeDelegate.pinUnlocked.value == true) otherAdapter.add(lockItem)
         otherAdapter.add(GenericCardItem(ID_SETTINGS, getString(R.string.preferences), "", R.drawable.ic_settings_big, R.color.tv_card_content_dark))
+        otherAdapter.add(GenericCardItem(ID_ADD_ALL_VIDEOS_PLAYLIST, getString(R.string.add_all_videos_to_playlist), "", R.drawable.ic_tv_list_addtoplaylist, R.color.tv_card_content_dark))
         val remoteAccessCard = GenericCardItem(ID_REMOTE_ACCESS, getString(R.string.remote_access), "", R.drawable.ic_remote_access_big, R.color.tv_card_content_dark)
         Settings.remoteAccessEnabled.observe(requireActivity()) {
             if (it)
@@ -409,6 +415,17 @@ class MainTvFragment : BrowseSupportFragment(), OnItemViewSelectedListener, OnIt
             }
             HEADER_MISC -> {
                 when ((item as GenericCardItem).id) {
+                    ID_ADD_ALL_VIDEOS_PLAYLIST -> lifecycleScope.launch {
+                        val videos = withContext(Dispatchers.IO) {
+                            Medialibrary.getInstance().getVideos(
+                                Medialibrary.SORT_DEFAULT,
+                                false,
+                                Settings.includeMissing,
+                                false
+                            ).filter { it.type != MediaWrapper.TYPE_DIR }
+                        }
+                        if (videos.isNotEmpty()) activity.addToPlaylist(videos.toList())
+                    }
                     ID_SETTINGS -> activity.startActivityForResult(Intent(activity, PreferencesActivity::class.java), ACTIVITY_RESULT_PREFERENCES)
                     ID_REFRESH -> {
                         if (!Medialibrary.getInstance().isWorking) {
