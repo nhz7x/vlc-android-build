@@ -38,7 +38,9 @@ jobs:
 
       - name: Locate APK
         if: always()
-        run: find . -type f -name "*.apk" -not -path "./.git/*" -print
+        run: |
+          find application/vlc-android/build/outputs -maxdepth 6 -type f -print 2>/dev/null || true
+          find application/vlc-android/build/outputs -type d -print 2>/dev/null || true
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
