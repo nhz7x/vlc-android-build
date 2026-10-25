@@ -41,3 +41,10 @@ jobs:
         with:
           name: vlc-android-debug
           path: application/vlc-android/build/outputs/apk/debug/*.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: vlc-android-debug
+          path: application/vlc-android/build/outputs/apk/**/*.apk
+          if-no-files-found: error
