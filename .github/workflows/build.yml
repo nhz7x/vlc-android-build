@@ -36,15 +36,19 @@ jobs:
       - name: Build APK
         run: gradle :application:vlc-android:assembleDebug
 
+      - name: Locate APK
+        run: find . -type f -name "*.apk" -not -path "./.git/*" -print
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: vlc-android-debug
           path: application/vlc-android/build/outputs/apk/debug/*.apk
 
+      - name: Locate APK
+        run: find . -type f -name "*.apk" -not -path "./.git/*" -print
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: vlc-android-debug
-          path: application/vlc-android/build/outputs/apk/**/*.apk
+          path: **/*.apk
           if-no-files-found: error
