@@ -30,6 +30,9 @@ jobs:
           cd libvlcjni
           git checkout 0b8dc65efb203c86a0476bc337ddd99ecf1c0ef6
 
+      - name: Configure Android SDK
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
       - name: Build APK
         run: gradle :application:vlc-android:assembleDebug
 
